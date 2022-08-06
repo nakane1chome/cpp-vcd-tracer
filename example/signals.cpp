@@ -91,7 +91,7 @@ int main(int argc, const char **argv) {
             if ((i % 100)==20) {
                 // Write
                 wr_rd_n.set(true);
-                mem_addr = i % memory.size();
+                mem_addr = static_cast<unsigned int>(i % memory.size());
                 memory[mem_addr] = i * 0x98764321 + 0x33442677;
             }
             if ((i % 100)==21) {

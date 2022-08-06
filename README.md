@@ -148,6 +148,8 @@ The output will look something like this:
 
 ## Implementation
 
+The library is implemented in C++17.
+
 This library is designed to use dependency injection rather than a C++
 class hierarchy for defining the relation between design hierarchy and
 variables. This allows the module and signal hierarchy creation to be de-coupled from tracing.
