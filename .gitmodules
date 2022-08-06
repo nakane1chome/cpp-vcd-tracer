@@ -1,0 +1,3 @@
+[submodule "export/cpp-vcd-tracer"]
+	path = _export/cpp-vcd-tracer
+	url = git@github.com:nakane1chome/cpp-vcd-tracer.git

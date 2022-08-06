@@ -1,0 +1,37 @@
+[*]
+[*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
+[*] Fri Aug  5 14:33:20 2022
+[*]
+[dumpfile] "/home/phil/github-wsl/simple-vcd/signals.vcd"
+[dumpfile_mtime] "Fri Aug  5 14:32:32 2022"
+[dumpfile_size] 320209
+[savefile] "/home/phil/github-wsl/simple-vcd/signals.gtkw"
+[timestart] 334
+[size] 1920 993
+[pos] -1 -1
+*-8.722319 1212 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] root.
+[treeopen] root.digital.
+[sst_width] 297
+[signals_width] 254
+[sst_expanded] 1
+[sst_vpaned_height] 295
+@8029
+root.analog.wave
+@20000
+-
+-
+-
+-
+@28
+root.digital.clk
+root.digital.bus.clk
+@24
+root.digital.bus.addr[15:0]
+@22
+root.digital.bus.burst[3:0]
+root.digital.bus.data[31:0]
+@28
+root.digital.bus.wr_strb
+[pattern_trace] 1
+[pattern_trace] 0
