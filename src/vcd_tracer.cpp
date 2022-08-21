@@ -69,7 +69,7 @@ namespace vcd_tracer {
         // Module and var definitions have been done, collect the
         // submodules and end the definition.
         out << context->vcd_scope.str();
-        for (const auto child : context->children) {
+        for (const auto &child : context->children) {
             finalize_header(out, child);
         }
         out << "$upscope $end\n";
@@ -232,7 +232,7 @@ namespace vcd_tracer {
             if constexpr (SIMPLE_VCD_DEBUG) {
                 out << "$comment seq=" << sequence << ", delta=" << delta << " $end\n";
             }
-            for (const auto identifier : identifiers) {
+            for (const auto &identifier : identifiers) {
                 const auto done_sequence = _var_map->dumper_map[identifier](out, false);
                 if (done_sequence.next.has_value()) {
                     status[done_sequence.next.value()].push_back(identifier);

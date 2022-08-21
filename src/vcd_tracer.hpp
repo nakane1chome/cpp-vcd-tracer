@@ -323,10 +323,21 @@ namespace vcd_tracer {
       protected:
         // A common dumper function.
         template<typename T>
-        void dump(std::ostream &out, const size_t bit_size, const value_state state, const T value) const;
+        void dump(std::ostream &out, 
+                  const size_t bit_size, 
+                  const value_state state, 
+                  const T value) const;
     };// value_base
 
 
+    /** A helper function to determine if a change is traced.
+        @retval true The sample has changed.
+    */
+    template<typename T> 
+    inline bool sample_changed(const T new_sample, const T prev_sample) {
+        return new_sample != prev_sample;
+    }
+    
     /** Typed value for tracing representation.
         @tparam BIT_SIZE - The size in bits of the type.
         @tparam TRACE_DEPTH - When set to more than one a buffer of values can be accumulated before writing to file.
@@ -453,12 +464,6 @@ namespace vcd_tracer {
             set_state<value_state::undriven_z>();
         }
 
-        /** A helper function to determine if a change is traced.
-            @retval true The sample has changed.
-        */
-        inline bool sample_changed(const T new_sample, const T prev_sample) {
-            return new_sample != prev_sample;
-        }
         /** Set a value to be traced
             @param v The new value to be traced.
         */
