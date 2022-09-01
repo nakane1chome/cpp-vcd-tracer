@@ -272,6 +272,30 @@ namespace vcd_tracer {
             _scope.updater(scope_fn::nop_dump);
         }
 
+        /** Assign this trace variable to the unknown (X) state
+         */
+        virtual void unknown(void) = 0;
+
+        /** Assign this trace variable to the undrive (Z) state
+         */
+        virtual void undriven(void) = 0;
+
+        /** Assign this trace variable to an integer value
+         */
+        virtual void set_uint64(uint64_t v) = 0;
+
+        /** Assign this trace variable to a real value
+         */
+        virtual void set_double(double v) = 0;
+
+        /** Elaborate a value by settings it's name and scope
+            @param add_fn Funtion to register this trace variable with it's scope.
+            @param default_value Initial value to be traced at time 0.
+        */
+        virtual void elaborate(scope_fn::add_fn add_fn,
+                               const std::string_view var_name) = 0;
+
+
       protected:
         /** Create a new value to be traced, defining it at compile time.
             A value cannot be created without type information, so this must be called by a concrete child class constructora.
@@ -414,8 +438,8 @@ namespace vcd_tracer {
             @param add_fn Funtion to register this trace variable with it's scope.
             @param default_value Initial value to be traced at time 0.
         */
-        void elaborate(scope_fn::add_fn add_fn,
-                       const std::string_view var_name) {
+        virtual void elaborate(scope_fn::add_fn add_fn,
+                       const std::string_view var_name) override {
             elaborate_base(BIT_SIZE,
                            vcd_var_type<T>::value,
                            add_fn,
@@ -455,14 +479,28 @@ namespace vcd_tracer {
         }
         /** Assign this trace variable to the unknown (X) state
          */
-        void unknown(void) {
+        virtual void unknown(void) override {
             set_state<value_state::unknown_x>();
         }
         /** Assign this trace variable to the undriven (Z) state
          */
-        void undriven(void) {
+        virtual void undriven(void) override  {
             set_state<value_state::undriven_z>();
         }
+
+        virtual void set_uint64(uint64_t v) override {
+            if constexpr (sizeof(T)<=8) {
+                const T vv = static_cast<T>(v);
+                set(vv);
+            }
+        }
+        virtual void set_double(double v) override {
+            if constexpr (sizeof(T)<=8) {
+                const T vv = static_cast<T>(v);
+                set(vv);
+            }
+        }
+
 
         /** Set a value to be traced
             @param v The new value to be traced.
@@ -551,19 +589,13 @@ namespace vcd_tracer {
 
       public:
         /** Elaborate a trace variable within this module. The varible should have been instanciated WITHOUT scope.
-            @tparam BIT_SIZE The size in bits of the trace variable.
-            @tparam TRACE_DEPTH The size of the trace buffer.
-            @tparam CUR_SEQ The pointer to the sequence counter.
             @param var A trace variable already declared.
             @param var_name The name of the variable to be used when tracing.
         */
-        template<typename T,
-                 unsigned int BIT_SIZE,
-                 int TRACE_DEPTH,
-                 scope_fn::sequence_t *CUR_SEQ>
-        void elaborate(value<T, BIT_SIZE, TRACE_DEPTH, CUR_SEQ> &var, const std::string_view var_name) {
+        void elaborate(value_base &var, const std::string_view var_name) {
             var.elaborate(get_add_fn(), var_name);
         }
+
         /** Get the function to be provided to a trace variable declaration to give it scoped withing this module instance
          */
         [[nodiscard]] scope_fn::add_fn get_add_fn(void) {
