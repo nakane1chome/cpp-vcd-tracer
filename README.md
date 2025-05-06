@@ -15,6 +15,13 @@ embedded in software that has some sort of signal hierarchy and time
 domain processing. For example it can be embedded in an instruction
 set simulator.
 
+## Integration and usage
+
+See
+ - <https://five-embeddev.com/code/2024/04/21/gtkwave>
+ - <https://www.five-embeddev.com/toolchain/2022/09/02/spike-fork>
+ - <https://www.shincbm.com/embedded/2022/08/06/vcd-tracer.html>
+
 ## LICENSE
 
 Copyright (c) 2022, Philip Mulholland
