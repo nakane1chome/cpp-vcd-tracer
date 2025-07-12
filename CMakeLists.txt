@@ -60,11 +60,8 @@ if(ENABLE_PCH)
     <utility>)
 endif()
 
-option(ENABLE_CONAN "Use Conan for dependency management" ON)
-if(ENABLE_CONAN)
-  include(cmake/Conan.cmake)
-  run_conan()
-endif()
+add_subdirectory(lib/Catch2 EXCLUDE_FROM_ALL)
+include(lib/Catch2/contrib/Catch.cmake)
 
 if(ENABLE_TESTING)
   enable_testing()
