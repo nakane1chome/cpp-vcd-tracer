@@ -31,7 +31,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-
+      with:
+          submodules: recursive
+    
     - name: Configure CMake
       run: |
           cmake -S . -B ./build -DCMAKE_BUILD_TYPE:STRING=$BUILD_TYPE -DENABLE_COVERAGE:BOOL=${{ matrix.ENABLE_COVERAGE }}
