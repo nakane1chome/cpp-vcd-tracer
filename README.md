@@ -15,6 +15,12 @@ embedded in software that has some sort of signal hierarchy and time
 domain processing. For example it can be embedded in an instruction
 set simulator.
 
+## Build
+
+Install cmake, build tools.
+
+make
+
 ## Integration and usage
 
 See
