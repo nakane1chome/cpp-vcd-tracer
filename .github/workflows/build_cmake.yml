@@ -33,28 +33,23 @@ jobs:
     - uses: actions/checkout@v2
       with:
           submodules: recursive
-    
-    - name: Configure CMake
-      run: |
-          cmake -S . -B ./build -DCMAKE_BUILD_TYPE:STRING=$BUILD_TYPE -DENABLE_COVERAGE:BOOL=${{ matrix.ENABLE_COVERAGE }}
-
-    - name: Build
-      # Execute the build.  You can specify a specific target with "--target <NAME>"
-      run: cmake --build ./build --config $BUILD_TYPE
-
-    - name: Unix - Test and coverage
-      if: runner.os != 'Windows'
-      working-directory: ./build
-      # Execute tests defined by the CMake configuration.
-      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: |
-          ctest -C $BUILD_TYPE
-          apt-get install -y gcovr
-          gcovr -j $(nproc) --delete --root ../ --print-summary --xml-pretty --xml coverage.xml .
-
-    - name: Publish to codecov
-      uses: codecov/codecov-action@v2
+    - name: Build Project
+      uses: threeal/cmake-action@v2.0.0
       with:
-        flags: ${{ runner.os }}
-        name: ${{ runner.os }}-coverage
-        files: ./build/coverage.xml
+        options: |
+          CMAKE_BUILD_TYPE:STRING=$BUILD_TYPE
+          ENABLE_COVERAGE:BOOL=${{ matrix.ENABLE_COVERAGE }}
+        bulld-args:|
+          --config $BUILD_TYPE
+    - name: Test Project
+      uses: threeal/ctest-action@v1.1.0
+      with:
+         build-config: $BUILD_TYPE
+    - name: Check Test Coverage
+      uses: threeal/gcovr-action@v1.1.0
+      with:
+        html-out: coverage.html
+        html-details: true
+        html-title: Test Coverage Report
+        html-theme: github.green
+	
