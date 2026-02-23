@@ -75,7 +75,8 @@ namespace vcd_tracer {
             (void)start;
             if (_idx.write) {
                 // Dump the value and reset the state
-                value_base::dump<T>(out, BIT_SIZE, _samples[0].state, _samples[0].value);
+                const size_t effective_bit_size = _runtime_bit_size > 0 ? _runtime_bit_size : BIT_SIZE;
+                value_base::dump<T>(out, effective_bit_size, _samples[0].state, _samples[0].value);
                 _idx.write = 0;
             }
             // No sequence is recorded.
@@ -100,7 +101,8 @@ namespace vcd_tracer {
                 return { {}, _samples[read_index].sequence };
             }
             // Dump a single value
-            value_base::dump<T>(out, BIT_SIZE, _samples[read_index].state, _samples[read_index].value);
+            const size_t effective_bit_size = _runtime_bit_size > 0 ? _runtime_bit_size : BIT_SIZE;
+            value_base::dump<T>(out, effective_bit_size, _samples[read_index].state, _samples[read_index].value);
             // Update the read pointer
             _idx.read++;
             // Test for a buffer with or without global sequencing

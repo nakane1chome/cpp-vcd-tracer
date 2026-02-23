@@ -340,9 +340,19 @@ namespace vcd_tracer {
         }
 
       public:
+      public:
+        /** Override the bit size used when dumping values.
+            This allows a value<uint64_t> (BIT_SIZE=64) to dump only
+            the relevant bits for a narrower signal.
+            @param bs The actual bit width of the signal.
+        */
+        void set_runtime_bit_size(unsigned int bs) { _runtime_bit_size = bs; }
+
       protected:
         // This is the context required to trace the variable.
         value_context _scope;
+        // When non-zero, overrides the template BIT_SIZE in dump().
+        size_t _runtime_bit_size{0};
 
       protected:
         // A common dumper function.
