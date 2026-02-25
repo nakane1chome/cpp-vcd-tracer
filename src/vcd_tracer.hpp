@@ -1,11 +1,11 @@
-/* 
+/*
  *  C++ VCD Tracer Library
  *
  *  For more information see https://github.com/nakane1chome/cpp-vcd-tracer
  *
  * Copyright (c) 2022, Philip Mulholland
  * All rights reserved.
- * 
+ *
  * Using the  BSD 3-Clause License
  *
  * See LICENSE for license details.
@@ -306,7 +306,7 @@ namespace vcd_tracer {
             @param dumper_fn The specialized function that can be used to dump this value to file.
         */
         value_base(const unsigned int bit_size,
-                   const char *var_type, 
+                   const char *var_type,
                    scope_fn::add_fn add_fn,
                    const std::string_view var_name,
                    scope_fn::dumper_fn dumper_fn)
@@ -340,16 +340,26 @@ namespace vcd_tracer {
         }
 
       public:
+      public:
+        /** Override the bit size used when dumping values.
+            This allows a value<uint64_t> (BIT_SIZE=64) to dump only
+            the relevant bits for a narrower signal.
+            @param bs The actual bit width of the signal.
+        */
+        void set_runtime_bit_size(unsigned int bs) { _runtime_bit_size = bs; }
+
       protected:
         // This is the context required to trace the variable.
         value_context _scope;
+        // When non-zero, overrides the template BIT_SIZE in dump().
+        size_t _runtime_bit_size{0};
 
       protected:
         // A common dumper function.
         template<typename T>
-        void dump(std::ostream &out, 
-                  const size_t bit_size, 
-                  const value_state state, 
+        void dump(std::ostream &out,
+                  const size_t bit_size,
+                  const value_state state,
                   const T value) const;
     };// value_base
 
@@ -357,11 +367,11 @@ namespace vcd_tracer {
     /** A helper function to determine if a change is traced.
         @retval true The sample has changed.
     */
-    template<typename T> 
+    template<typename T>
     inline bool sample_changed(const T new_sample, const T prev_sample) {
         return new_sample != prev_sample;
     }
-    
+
     /** Typed value for tracing representation.
         @tparam BIT_SIZE - The size in bits of the type.
         @tparam TRACE_DEPTH - When set to more than one a buffer of values can be accumulated before writing to file.
@@ -739,7 +749,7 @@ namespace vcd_tracer {
         // Mapping of registers to identifiers and functions
         std::shared_ptr<map_data> _var_map = std::make_shared<map_data>();
 
-      public : 
+      public :
         //! The root module in the design hiearchy
         module root;
 
