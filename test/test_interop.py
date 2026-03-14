@@ -123,3 +123,54 @@ def test_interop_gtkwave(tmp_path):
                 f"Row {i}, col {j} ({cpp_rows[0][j]}): "
                 f"C++={c!r} != gtkwave={g!r}"
             )
+
+
+def test_interop_gtkwave_screenshot(tmp_path):
+    exe = get_interop_exe()
+
+    if not shutil.which("gtkwave"):
+        pytest.skip("gtkwave not found")
+    if not shutil.which("xwd"):
+        pytest.skip("xwd not found")
+
+    vcd_path = str(tmp_path / "interop.vcd")
+    cpp_csv_path = str(tmp_path / "cpp_output.csv")
+    png_path = str(tmp_path / "gtkwave_screenshot.png")
+
+    # Run the C++ interop executable to produce VCD and reference CSV
+    result = subprocess.run(
+        [exe, vcd_path, cpp_csv_path],
+        capture_output=True, text=True
+    )
+    assert result.returncode == 0, f"interop failed: {result.stderr}"
+
+    # Run GTKWave with screenshot script under xvfb-run
+    tcl_script = os.path.join(os.path.dirname(__file__), "gtkwave_screenshot.tcl")
+    env = os.environ.copy()
+    env["GTKWAVE_PNG_OUT"] = png_path
+
+    # xvfb-run is required for clean screenshots (virtual framebuffer)
+    if not shutil.which("xvfb-run"):
+        pytest.skip("xvfb-run not found")
+
+    result = subprocess.run(
+        ["xvfb-run", "--auto-servernum",
+         "--server-args", "-screen 0 1920x1080x24",
+         "gtkwave", vcd_path, "-T", tcl_script],
+        capture_output=True, text=True, env=env, timeout=30
+    )
+    assert result.returncode == 0, f"gtkwave screenshot failed: {result.stderr}"
+
+    # Copy artifacts to INTEROP_ARTIFACTS dir, defaulting to build/artifacts/
+    artifacts_dir = os.environ.get("INTEROP_ARTIFACTS")
+    if not artifacts_dir:
+        # Default: build/artifacts/ relative to the built executable
+        artifacts_dir = os.path.join(os.path.dirname(exe), "..", "artifacts")
+    os.makedirs(artifacts_dir, exist_ok=True)
+    shutil.copy2(vcd_path, os.path.join(artifacts_dir, "interop.vcd"))
+    shutil.copy2(cpp_csv_path, os.path.join(artifacts_dir, "interop.csv"))
+    if os.path.exists(png_path):
+        shutil.copy2(png_path, os.path.join(artifacts_dir, "gtkwave_screenshot.png"))
+
+    assert os.path.exists(png_path), "Screenshot was not created"
+    assert os.path.getsize(png_path) > 0, "Screenshot file is empty"

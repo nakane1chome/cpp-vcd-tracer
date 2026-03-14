@@ -51,6 +51,15 @@ jobs:
       uses: threeal/ctest-action@v1.1.0
       with:
          build-config: $BUILD_TYPE
+      env:
+        INTEROP_ARTIFACTS: ${{ github.workspace }}/interop-artifacts
+    - name: Upload Interop Artifacts
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: interop-artifacts
+        path: interop-artifacts/
+        if-no-files-found: ignore
     - name: Check Test Coverage
       uses: threeal/gcovr-action@v1.1.0
       with:
