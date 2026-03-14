@@ -175,7 +175,10 @@ def test_interop_gtkwave_screenshot(tmp_path):
     result = subprocess.run(
         ["xvfb-run", "--auto-servernum",
          "--server-args", "-screen 0 1920x1080x24",
-         "gtkwave", vcd_path, "-T", tcl_script],
+         "gtkwave", vcd_path,
+         "-4", "initial_window_x 1920",
+         "-4", "initial_window_y 1080",
+         "-T", tcl_script],
         capture_output=True, text=True, env=env, timeout=30
     )
     assert result.returncode == 0, f"gtkwave screenshot failed: {result.stderr}"
