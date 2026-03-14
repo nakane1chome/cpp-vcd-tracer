@@ -1,11 +1,11 @@
-/*  
+/*
  *  C++ VCD Tracer Library Tests
  *
  *  For more information see https://github.com/nakane1chome/cpp-vcd-tracer
  *
  * Copyright (c) 2022, Philip Mulholland
  * All rights reserved.
- * 
+ *
  * Using the  BSD 3-Clause License
  *
  * See LICENSE for license details.
@@ -36,14 +36,14 @@ TEST_CASE("VCD identifiers are created-0 char", "[GenerateVcdKey-0]") {
     STATIC_REQUIRE(std::string_view(GenerateVcdKey(0).data()) == "!");
 }
 
-TEST_CASE("VCD identifiers are created-89 char", "[GenerateVcdKey-89]") {
-    STATIC_REQUIRE(std::string_view(GenerateVcdKey(89).data()) == "z");
+TEST_CASE("VCD identifiers are created-87 char", "[GenerateVcdKey-87]") {
+    STATIC_REQUIRE(std::string_view(GenerateVcdKey(87).data()) == "z");
 }
 
-TEST_CASE("VCD identifiers are created-90 char", "[GenerateVcdKey-90]") {
-    STATIC_REQUIRE(std::string_view(GenerateVcdKey(90).data()) == "!!");
+TEST_CASE("VCD identifiers are created-88 char", "[GenerateVcdKey-88]") {
+    STATIC_REQUIRE(std::string_view(GenerateVcdKey(88).data()) == "!!");
 }
 
-TEST_CASE("VCD identifiers are created-180 char", "[GenerateVcdKey-180]") {
-    STATIC_REQUIRE(std::string_view(GenerateVcdKey(180).data()) == "\"!");
+TEST_CASE("VCD identifiers are created-176 char", "[GenerateVcdKey-176]") {
+    STATIC_REQUIRE(std::string_view(GenerateVcdKey(176).data()) == "\"!");
 }

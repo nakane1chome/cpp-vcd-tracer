@@ -33,12 +33,12 @@ std::string GenerateVcdKey(unsigned int number)// NOLINT(misc-no-recursion)
 
 TEST_CASE("VCD identifiers are created", "[GenerateVcdKey]") {
     REQUIRE(GenerateVcdKey(0) == "!");
-    REQUIRE(GenerateVcdKey(8) == ")");
-    REQUIRE(GenerateVcdKey(89) == "z");
-    REQUIRE(GenerateVcdKey(90) == "!!");
-    REQUIRE(GenerateVcdKey(91) == "!\"");
-    REQUIRE(GenerateVcdKey(179) == "!z");
-    REQUIRE(GenerateVcdKey(180) == "\"!");
+    REQUIRE(GenerateVcdKey(8) == "+");
+    REQUIRE(GenerateVcdKey(87) == "z");
+    REQUIRE(GenerateVcdKey(88) == "!!");
+    REQUIRE(GenerateVcdKey(89) == "!\"");
+    REQUIRE(GenerateVcdKey(175) == "!z");
+    REQUIRE(GenerateVcdKey(176) == "\"!");
 }
 
 TEST_CASE("VCD Integer Value", "VcdValue") {

@@ -61,3 +61,20 @@ catch_discover_tests(
   "relaxed_constexpr."
   OUTPUT_SUFFIX
   .xml)
+
+# --- Interoperability test ---
+add_executable(interop interop.cpp)
+target_link_libraries(interop PRIVATE project_options vcd_tracer)
+
+find_package(Python3 COMPONENTS Interpreter)
+if(Python3_FOUND)
+  add_test(
+    NAME interop_pytest
+    COMMAND ${Python3_EXECUTABLE} -m pytest
+            ${CMAKE_CURRENT_SOURCE_DIR}/test_interop.py -v
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  )
+  set_tests_properties(interop_pytest PROPERTIES
+    ENVIRONMENT "INTEROP_EXE=$<TARGET_FILE:interop>"
+  )
+endif()
