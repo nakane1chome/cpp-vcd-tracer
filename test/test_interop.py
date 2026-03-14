@@ -13,6 +13,15 @@ def get_interop_exe():
     return exe
 
 
+def get_artifacts_dir():
+    exe = os.environ.get("INTEROP_EXE", "")
+    artifacts_dir = os.environ.get("INTEROP_ARTIFACTS")
+    if not artifacts_dir:
+        artifacts_dir = os.path.join(os.path.dirname(exe), "..", "artifacts")
+    os.makedirs(artifacts_dir, exist_ok=True)
+    return artifacts_dir
+
+
 def parse_csv(path):
     with open(path) as f:
         return list(csv.reader(f))
@@ -44,6 +53,12 @@ def test_interop(tmp_path):
 
     # Convert VCD to CSV using pyvcd
     vcd_to_csv(vcd_path, py_csv_path)
+
+    # Save artifacts
+    artifacts_dir = get_artifacts_dir()
+    shutil.copy2(vcd_path, os.path.join(artifacts_dir, "interop.vcd"))
+    shutil.copy2(cpp_csv_path, os.path.join(artifacts_dir, "interop.csv"))
+    shutil.copy2(py_csv_path, os.path.join(artifacts_dir, "pyvcd.csv"))
 
     cpp_rows = parse_csv(cpp_csv_path)
     py_rows = parse_csv(py_csv_path)
@@ -103,6 +118,10 @@ def test_interop_gtkwave(tmp_path):
     )
     assert result.returncode == 0, f"gtkwave failed: {result.stderr}"
 
+    # Save artifact
+    artifacts_dir = get_artifacts_dir()
+    shutil.copy2(gtk_csv_path, os.path.join(artifacts_dir, "gtkwave.csv"))
+
     # Compare CSVs
     cpp_rows = parse_csv(cpp_csv_path)
     gtk_rows = parse_csv(gtk_csv_path)
@@ -161,14 +180,8 @@ def test_interop_gtkwave_screenshot(tmp_path):
     )
     assert result.returncode == 0, f"gtkwave screenshot failed: {result.stderr}"
 
-    # Copy artifacts to INTEROP_ARTIFACTS dir, defaulting to build/artifacts/
-    artifacts_dir = os.environ.get("INTEROP_ARTIFACTS")
-    if not artifacts_dir:
-        # Default: build/artifacts/ relative to the built executable
-        artifacts_dir = os.path.join(os.path.dirname(exe), "..", "artifacts")
-    os.makedirs(artifacts_dir, exist_ok=True)
-    shutil.copy2(vcd_path, os.path.join(artifacts_dir, "interop.vcd"))
-    shutil.copy2(cpp_csv_path, os.path.join(artifacts_dir, "interop.csv"))
+    # Save screenshot artifact
+    artifacts_dir = get_artifacts_dir()
     if os.path.exists(png_path):
         shutil.copy2(png_path, os.path.join(artifacts_dir, "gtkwave_screenshot.png"))
 
