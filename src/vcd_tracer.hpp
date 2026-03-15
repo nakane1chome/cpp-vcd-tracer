@@ -41,6 +41,7 @@ namespace vcd_tracer {
 
     /** Sanitize a name for use in VCD scope/variable declarations.
         Replaces characters that are not alphanumeric or underscore with '_'.
+        Prepends '_' if the name starts with a digit.
     */
     inline std::string sanitize_vcd_name(std::string_view name) {
         std::string result(name);
@@ -48,6 +49,9 @@ namespace vcd_tracer {
             if (!std::isalnum(static_cast<unsigned char>(c)) && c != '_') {
                 c = '_';
             }
+        }
+        if (!result.empty() && std::isdigit(static_cast<unsigned char>(result[0]))) {
+            result.insert(result.begin(), '_');
         }
         return result;
     }
