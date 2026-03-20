@@ -47,7 +47,9 @@ namespace vcd_tracer {
                 }
                 else {
                     // Return the valid identifier.
+                    // Skip '#' and '$' as they are reserved in VCD.
                     _identifier[i]++;
+                    if (_identifier[i] == '#') _identifier[i] = '%';
                     return _identifier.data();
                 }
             } while (i != 0);

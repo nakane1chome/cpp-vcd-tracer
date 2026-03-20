@@ -1,11 +1,11 @@
-/* 
+/*
  *  C++ VCD Tracer Library
  *
  *  For more information see https://github.com/nakane1chome/cpp-vcd-tracer
  *
  * Copyright (c) 2022, Philip Mulholland
  * All rights reserved.
- * 
+ *
  * Using the  BSD 3-Clause License
  *
  * See LICENSE for license details.
@@ -300,21 +300,15 @@ namespace vcd_tracer {
             }
             else {
                 T mask = static_cast<T>(1) << (bit_size - 1);
-                bool prev_bit = (value & mask) != 0;
-                bool compress = true;
-                for (int i = bit_size - 2; i >= 0; i--) {
+                // Only compress leading 0s; per IEEE 1364, VCD viewers
+                // zero-fill shorter values, so leading 1s must be kept.
+                while ((mask != static_cast<T>(1)) & ((value & mask) == 0)) {
                     mask = mask >> 1;
-                    const bool this_bit = (value & mask) != 0;
-                    if (compress && (this_bit == prev_bit)) {
-                        // Compress the left bits until a change is present..
-                    }
-                    else {
-                        compress = false;
-                        out << (prev_bit ? "1" : "0");
-                    }
-                    prev_bit = this_bit;
                 }
-                out << (prev_bit ? "1" : "0");
+                while (mask != 0) {
+                    out << ((value & mask) != 0) ? "1" : "0";
+                    mask = mask >> 1;
+                }
             }
             out << " " << _scope.identifier << "\n";
         }

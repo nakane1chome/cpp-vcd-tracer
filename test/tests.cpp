@@ -1,11 +1,11 @@
-/*  
+/*
  *  C++ VCD Tracer Library Tests
  *
  *  For more information see https://github.com/nakane1chome/cpp-vcd-tracer
  *
  * Copyright (c) 2022, Philip Mulholland
  * All rights reserved.
- * 
+ *
  * Using the  BSD 3-Clause License
  *
  * See LICENSE for license details.
@@ -33,12 +33,12 @@ std::string GenerateVcdKey(unsigned int number)// NOLINT(misc-no-recursion)
 
 TEST_CASE("VCD identifiers are created", "[GenerateVcdKey]") {
     REQUIRE(GenerateVcdKey(0) == "!");
-    REQUIRE(GenerateVcdKey(8) == ")");
-    REQUIRE(GenerateVcdKey(89) == "z");
-    REQUIRE(GenerateVcdKey(90) == "!!");
-    REQUIRE(GenerateVcdKey(91) == "!\"");
-    REQUIRE(GenerateVcdKey(179) == "!z");
-    REQUIRE(GenerateVcdKey(180) == "\"!");
+    REQUIRE(GenerateVcdKey(8) == "+");
+    REQUIRE(GenerateVcdKey(87) == "z");
+    REQUIRE(GenerateVcdKey(88) == "!!");
+    REQUIRE(GenerateVcdKey(89) == "!\"");
+    REQUIRE(GenerateVcdKey(175) == "!z");
+    REQUIRE(GenerateVcdKey(176) == "\"!");
 }
 
 TEST_CASE("VCD Integer Value", "VcdValue") {
@@ -87,7 +87,7 @@ TEST_CASE("VCD Integer Value", "VcdValue") {
         {
             std::ostringstream dump_out;
             (void)my_dumper(dump_out, true);
-            REQUIRE(dump_out.str() == "b010101010 vv\n");
+            REQUIRE(dump_out.str() == "b10101010 vv\n");
         }
 
         test_var.undriven();
@@ -208,12 +208,12 @@ TEST_CASE("VCD Integer Value", "VcdValue") {
         {
             std::ostringstream dump_out;
             (void)my_dumper(dump_out, true);
-            REQUIRE(dump_out.str() == "b01101010101 vv\n");
+            REQUIRE(dump_out.str() == "b1101010101 vv\n");
         }
     }
 
     {
-        vcd_tracer::value<unsigned int, 17> test_var(0x1DEAD);
+        vcd_tracer::value<unsigned int, 17> test_var(0x05A5A);
 
         {
             std::ostringstream dump_out;
@@ -229,8 +229,8 @@ TEST_CASE("VCD Integer Value", "VcdValue") {
         {
             std::ostringstream dump_out;
             (void)my_dumper(dump_out, true);
-            // 2 LSB are compressed
-            REQUIRE(dump_out.str() == "b101111010101101 vv\n");
+            // 2 MSB are compressed
+            REQUIRE(dump_out.str() == "b101101001011010 vv\n");
         }
 
         test_var.set(0x0);
@@ -240,6 +240,41 @@ TEST_CASE("VCD Integer Value", "VcdValue") {
             (void)my_dumper(dump_out, true);
             REQUIRE(dump_out.str() == "b0 vv\n");
         }
+
+        test_var.set(0x5);
+
+        {
+            std::ostringstream dump_out;
+            (void)my_dumper(dump_out, true);
+            REQUIRE(dump_out.str() == "b101 vv\n");
+        }
+
+        test_var.set(0xA5);
+
+        {
+            std::ostringstream dump_out;
+            (void)my_dumper(dump_out, true);
+            REQUIRE(dump_out.str() == "b10100101 vv\n");
+        }
+
+        test_var.set(0x10000);
+
+        {
+            std::ostringstream dump_out;
+            (void)my_dumper(dump_out, true);
+            REQUIRE(dump_out.str() == "b10000000000000000 vv\n");
+        }
+
+        test_var.set(0x08000);
+
+        {
+            std::ostringstream dump_out;
+            (void)my_dumper(dump_out, true);
+            REQUIRE(dump_out.str() == "b1000000000000000 vv\n");
+        }
+
+
+
     }
 }
 
@@ -306,7 +341,7 @@ TEST_CASE("VCD Trace Buffer", "VcdTraceBuffer") {
                 }
             }
         }
-        REQUIRE(dump_out.str() == "b01 vv\nb010 vv\nb011 vv\nb0100 vv\nb0101 vv\nb0 vv\n");
+        REQUIRE(dump_out.str() == "b1 vv\nb10 vv\nb11 vv\nb100 vv\nb101 vv\nb0 vv\n");
     }
 }
 
@@ -506,37 +541,37 @@ TEST_CASE("VCD Top Trace Buf", "VcdTopTraceBuf") {
 
         // Write 2 values to var1, 1 value to var2
         var_1.set(0x11);
-        edata << "b010001 !\n";
+        edata << "b10001 !\n";
         seq++;
 
         edata << "#1\n";
         var_1.set(0x12);
-        edata << "b010010 !\n";
+        edata << "b10010 !\n";
         seq++;
 
         edata << "#2\n";
         var_2.set(0x21);
-        edata << "b0100001 \"\n";
+        edata << "b100001 \"\n";
         seq++;
 
         edata << "#3\n";
         var_2.set(0x22);
-        edata << "b0100010 \"\n";
+        edata << "b100010 \"\n";
         seq++;
 
         edata << "#4\n";
         var_1.set(0x13);
-        edata << "b010011 !\n";
+        edata << "b10011 !\n";
         seq++;
 
         edata << "#5\n";
         var_1.set(0x14);
-        edata << "b010100 !\n";
+        edata << "b10100 !\n";
         seq++;
 
         edata << "#6\n";
         var_2.set(0x23);
-        edata << "b0100011 \"\n";
+        edata << "b100011 \"\n";
 
         edata << "#10\n";
 
@@ -546,4 +581,30 @@ TEST_CASE("VCD Top Trace Buf", "VcdTopTraceBuf") {
 
         REQUIRE(data.str() == edata.str());
     }
+}
+
+
+
+TEST_CASE("VCD GitHub Issue 5", "VcdIssue5") {
+    vcd_tracer::value<uint16_t> sig;
+    vcd_tracer::top dumper("top");
+    {
+        vcd_tracer::module mod(dumper.root, "dut");
+        mod.elaborate(sig, "val");
+    }
+
+    std::ostringstream header;
+    dumper.finalize_header(header, std::chrono::system_clock::from_time_t(0));
+    //REQUIRE(header.str() == EXPECTED_HEADER);
+
+    std::ostringstream data;
+    std::ostringstream edata;
+
+    sig.set(uint16_t(0xCDBC));  // 16-bit binary: 1100110110111100
+    edata << "b1100110110111100 !\n";
+    dumper.time_update_abs(data, std::chrono::nanoseconds{10});
+    edata << "#10\n";
+
+    REQUIRE(data.str() == edata.str());
+
 }
