@@ -1,11 +1,11 @@
-/*  
+/*
  *  C++ VCD Tracer Library Signal Definition and Tracing Example.
  *
  *  For more information see https://github.com/nakane1chome/cpp-vcd-tracer
  *
  * Copyright (c) 2022, Philip Mulholland
  * All rights reserved.
- * 
+ *
  * Using the  BSD 3-Clause License
  *
  * See LICENSE for license details.
@@ -41,19 +41,19 @@ int main(int argc, const char **argv) {
 
 
     // The top module defines the base of the signal hierarchy
-    // It also owns 
+    // It also owns
     vcd_tracer::top dumper("root");
 
     // Define a module hierarchy and associate signals with it
     // This elaboration is indepdent of the signal definition above
-    // so the modules can be deallocated 
+    // so the modules can be deallocated
     {
         // Create two child domains.
         // Any number
         vcd_tracer::module digital(dumper.root, "digital");
         vcd_tracer::module bus(digital, "bus");
         vcd_tracer::module analog(dumper.root, "analog");
-        
+
         // The elaboration of signals inside of the module hierarchy
         digital.elaborate(clock1, "clk");
         analog.elaborate(sine_wave, "wave");
@@ -70,12 +70,12 @@ int main(int argc, const char **argv) {
 
         // Finalize signals before tracing11
         // The VCD format does not allow dynamic signal definition.
-        dumper.finalize_header(fout, 
+        dumper.finalize_header(fout,
                                std::chrono::system_clock::from_time_t(0));
 
         unsigned int mem_addr = 0;
         burst.set(1);
-        
+
         for (unsigned int i=0; i<CYCLES; i++) {
 
             // div2
@@ -86,7 +86,7 @@ int main(int argc, const char **argv) {
             // Waveform
             const double seconds = static_cast<double>(i) * 1e-9 * TICK_NS;
             sine_wave.set( WAVE_BIAS_V + (WAVE_AMPL_V * sin(seconds * WAVE_FREQ_HZ * 2.0 * M_PI)));
-            
+
             // Memory read write
             if ((i % 100)==20) {
                 // Write
@@ -104,9 +104,9 @@ int main(int argc, const char **argv) {
             addr.set(static_cast<uint16_t>(mem_addr&0xFFFF));
             data.set(memory[mem_addr]);
 
-            
+
             dumper.time_update_abs(fout, std::chrono::nanoseconds{ TICK_NS * i });
-            
+
         }
 
     }

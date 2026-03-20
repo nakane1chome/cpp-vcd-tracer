@@ -38,7 +38,7 @@ BSD 3-Clause License. See LICENSE.
 
 Signals are traced using the templated `vcd_tracer::value<>`
 class. The data type that can be traced is limited to fundamental
-types. The bit size can be specified independently to the 
+types. The bit size can be specified independently to the
 
 ~~~
    vcd_tracer::value<bool> clock1;
@@ -60,7 +60,7 @@ be traced.
    vcd_tracer::module digital(dumper.root, "digital");
    vcd_tracer::module bus(digital, "bus");
    vcd_tracer::module analog(dumper.root, "analog");
-   
+
    // The elaboration of signals inside of the module hierarchy
    digital.elaborate(clock1, "clk");
    analog.elaborate(sine_wave, "wave");
@@ -75,7 +75,7 @@ elaborated the header can be finalized.
 
 ~~~
    std::ofstream fout(fout_name);
-   dumper.finalize_header(fout, 
+   dumper.finalize_header(fout,
        std::chrono::system_clock::from_time_t(0));
 ~~~
 
@@ -94,7 +94,7 @@ Values are written to file when the `time_update_abs()` or
 `time_update_delta()` methods are called.
 
 ~~~
-   dumper.time_update_abs(fout, 
+   dumper.time_update_abs(fout,
         std::chrono::nanoseconds{ TICK_NS * i });
 ~~~
 
@@ -166,6 +166,11 @@ The library is implemented in C++17.
 This library is designed to use dependency injection rather than a C++
 class hierarchy for defining the relation between design hierarchy and
 variables. This allows the module and signal hierarchy creation to be de-coupled from tracing.
+
+## Testing
+
+- See [test/README.md](test/README.md) for details on unit tests, constexpr tests, and interoperability tests against pyvcd and GTKWave.
+- The [GitHub Actions workflow](.github/workflows/build_cmake.yml) runs all tests and uploads interop artifacts (VCD, CSV, and GTKWave screenshot) downloadable from the workflow run's Artifacts section.
 
 ## Related Projects
 
