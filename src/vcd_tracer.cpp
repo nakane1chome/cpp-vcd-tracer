@@ -81,22 +81,22 @@ namespace vcd_tracer {
 
     top::top(std::string_view name)
         : root(
-            // This function will register any variable in the child
-            // hierarchy with this top module.
-            [identifier_generator = _identifier_generator, var_map = _var_map](const std::string_view full_path,
-                                                                               scope_fn::dumper_fn fn) -> value_context {
-                // Allocate a new identifier
-                const std::string identifier = identifier_generator->next();
-                // Register this new varaible - the path and function to write values to the trace.
-                var_map->identifier_map[identifier] = full_path;
-                var_map->dumper_map[identifier] = fn;
-                // Create a function that allows the registration in this class to be reset by the variable destructor.
-                auto updater = [identifier, var_map](scope_fn::dumper_fn fn) -> void {
-                    var_map->dumper_map[identifier] = fn;
-                };
-                return value_context{ identifier, updater };
-            },
-            name) {
+              // This function will register any variable in the child
+              // hierarchy with this top module.
+              [identifier_generator = _identifier_generator, var_map = _var_map](const std::string_view full_path,
+                                                                                 scope_fn::dumper_fn fn) -> value_context {
+                  // Allocate a new identifier
+                  const std::string identifier = identifier_generator->next();
+                  // Register this new varaible - the path and function to write values to the trace.
+                  var_map->identifier_map[identifier] = full_path;
+                  var_map->dumper_map[identifier] = fn;
+                  // Create a function that allows the registration in this class to be reset by the variable destructor.
+                  auto updater = [identifier, var_map](scope_fn::dumper_fn fn) -> void {
+                      var_map->dumper_map[identifier] = fn;
+                  };
+                  return value_context{ identifier, updater };
+              },
+              name) {
     }
 
     void top::log_time(std::ostream &out,
