@@ -14,3 +14,11 @@ repos:
     - id: clang-format
       # Optional: Specify a style file in your repo (e.g., .clang-format)
       args: ["-style=.clang-format", "-i"]
+-   repo: local
+    hooks:
+    - id: clang-tidy
+      name: clang-tidy
+      entry: clang-tidy --warnings-as-errors=*
+      language: system
+      types_or: [c, c++]
+      files: ^src/
