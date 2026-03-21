@@ -456,7 +456,7 @@ namespace vcd_tracer {
             @param default_value Initial value to be traced at time 0.
         */
         virtual void elaborate(scope_fn::add_fn add_fn,
-                       const std::string_view var_name) override {
+                               const std::string_view var_name) override {
             elaborate_base(BIT_SIZE,
                            vcd_var_type<T>::value,
                            add_fn,
@@ -501,18 +501,18 @@ namespace vcd_tracer {
         }
         /** Assign this trace variable to the undriven (Z) state
          */
-        virtual void undriven(void) override  {
+        virtual void undriven(void) override {
             set_state<value_state::undriven_z>();
         }
 
         virtual void set_uint64(uint64_t v) override {
-            if constexpr (sizeof(T)<=8) {
+            if constexpr (sizeof(T) <= 8) {
                 const T vv = static_cast<T>(v);
                 set(vv);
             }
         }
         virtual void set_double(double v) override {
-            if constexpr (sizeof(T)<=8) {
+            if constexpr (sizeof(T) <= 8) {
                 const T vv = static_cast<T>(v);
                 set(vv);
             }
@@ -732,13 +732,12 @@ namespace vcd_tracer {
         void finalize_trace(std::ostream &out);
 
       private:
-
         struct map_data {
             // Map identifiers to variable names
             std::map<std::string, std::string> identifier_map;
             // Map idenfiers to dump functions.
             std::map<std::string, scope_fn::dumper_fn> dumper_map;
-        } ;
+        };
 
       private:
         /** This function will do the bulk of the dumping af variables. */
@@ -756,7 +755,7 @@ namespace vcd_tracer {
         // Mapping of registers to identifiers and functions
         std::shared_ptr<map_data> _var_map = std::make_shared<map_data>();
 
-      public :
+      public:
         //! The root module in the design hiearchy
         module root;
 
