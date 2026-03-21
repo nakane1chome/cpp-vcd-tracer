@@ -139,7 +139,7 @@ namespace vcd_tracer {
         static_cast<void>(gmtime_r(&start_time, &time_buf));
         static constexpr size_t DATE_BUF_SIZE = 64;
         std::array<char, DATE_BUF_SIZE> date_str{};
-        static_cast<void>(std::strftime(date_str.data(), date_str.size(), "%c\n", &time_buf));
+        static_cast<void>(std::strftime(date_str.data(), date_str.size(), "%a %b %e %H:%M:%S %Y\n", &time_buf));
         out << "$date\n"
             << "   " << date_str.data()
             << "$end\n";
@@ -165,7 +165,7 @@ namespace vcd_tracer {
         time_update_core(out);
         // Now the variables have been dumped to capture the state UP TO this time
         // log the time
-        const auto delta_count = delta.count();
+        const auto delta_count = static_cast<scope_fn::sequence_t>(delta.count());
         _timestamp += delta_count;
         if (_timestamp <= _tracepoint) {
             // If the timestamp has fallen behind the tracepoint, move it forward
@@ -186,11 +186,11 @@ namespace vcd_tracer {
         time_update_core(out);
         // Now the variables have been dumped to capture the state UP TO this time
         // log the time
-        auto new_timestamp_count = new_timestamp.count();
+        auto new_timestamp_count = static_cast<scope_fn::sequence_t>(new_timestamp.count());
         if (new_timestamp_count >= _timestamp) {
-            if (new_timestamp_count <= static_cast<long int>(_tracepoint)) {
+            if (new_timestamp_count <= _tracepoint) {
                 // If the timestamp has fallen behind the tracepoint, move it forward
-                new_timestamp_count = static_cast<decltype(new_timestamp_count)>(_tracepoint);
+                new_timestamp_count = _tracepoint;
                 if constexpr (SIMPLE_VCD_DEBUG) {
                     out << "$comment SYNC ABS TIME WITH TRACEPOINT " << _tracepoint << " $end\n";
                 }
@@ -318,15 +318,15 @@ namespace vcd_tracer {
             else {
                 using unsigned_T = std::make_unsigned_t<T>;
                 auto uvalue = static_cast<unsigned_T>(value);
-                unsigned_T mask = static_cast<unsigned_T>(1) << (bit_size - 1);
+                auto mask = static_cast<unsigned_T>(static_cast<unsigned_T>(1) << (bit_size - 1));
                 // Only compress leading 0s; per IEEE 1364, VCD viewers
                 // zero-fill shorter values, so leading 1s must be kept.
                 while ((mask != static_cast<unsigned_T>(1)) & ((uvalue & mask) == 0)) {
-                    mask = mask >> 1U;
+                    mask = static_cast<unsigned_T>(mask >> 1U);
                 }
                 while (mask != 0) {
                     out << (((uvalue & mask) != 0) ? "1" : "0");
-                    mask = mask >> 1U;
+                    mask = static_cast<unsigned_T>(mask >> 1U);
                 }
             }
             out << " " << _scope.identifier << "\n";
