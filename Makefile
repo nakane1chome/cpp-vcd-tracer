@@ -30,8 +30,9 @@ make_cov : build_cov
 	cmake --build build_cov
 
 .PHONY: test
-test: make
+test: make make_clang
 	cd build; ctest -C Release
+	cd build_clang; ctest -C Release
 
 .PHONY: test_cov
 test_cov: make_cov
