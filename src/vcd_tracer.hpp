@@ -649,7 +649,7 @@ namespace vcd_tracer {
 
       private:
         void finalize_header(std::ostream &out,
-                             std::shared_ptr<const module_instance> context);
+                             const std::shared_ptr<const module_instance> &context);
 
         /** A function that can be passed to a new trace variable to declare it within the scope of this module instance
          */
@@ -745,9 +745,9 @@ namespace vcd_tracer {
 
       private:
         // The most recently traced time
-        scope_fn::sequence_t _tracepoint;
+        scope_fn::sequence_t _tracepoint{ 0 };
         // The most recently updated time.
-        scope_fn::sequence_t _timestamp;
+        scope_fn::sequence_t _timestamp{ 0 };
         // Write out a time in the VCD trace format
         void log_time(std::ostream &out, scope_fn::sequence_t new_time, bool force, std::string_view reason);
         // Creation of identifiers
