@@ -48,7 +48,7 @@ format:
 
 .PHONY: lint
 lint: build_clang
-	clang-tidy-14 \
+	clang-tidy \
 		-p build_clang \
 		src/vcd_tracer.cpp
 
