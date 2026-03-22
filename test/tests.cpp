@@ -284,9 +284,6 @@ TEST_CASE("VCD Integer Value", "VcdValue") {
             (void)my_dumper(dump_out, true);
             REQUIRE(dump_out.str() == "b1000000000000000 vv\n");
         }
-
-
-
     }
 }
 
@@ -580,7 +577,6 @@ TEST_CASE("VCD Top Trace Buf", "VcdTopTraceBuf") {
 }
 
 
-
 TEST_CASE("VCD GitHub Issue 5", "VcdIssue5") {
     vcd_tracer::value<uint16_t> sig;
     vcd_tracer::top dumper("top");
@@ -591,18 +587,17 @@ TEST_CASE("VCD GitHub Issue 5", "VcdIssue5") {
 
     std::ostringstream header;
     dumper.finalize_header(header, std::chrono::system_clock::from_time_t(0));
-    //REQUIRE(header.str() == EXPECTED_HEADER);
+    // REQUIRE(header.str() == EXPECTED_HEADER);
 
     std::ostringstream data;
     std::ostringstream edata;
 
-    sig.set(uint16_t(0xCDBC));  // 16-bit binary: 1100110110111100
+    sig.set(uint16_t(0xCDBC));// 16-bit binary: 1100110110111100
     edata << "b1100110110111100 !\n";
-    dumper.time_update_abs(data, std::chrono::nanoseconds{10});
+    dumper.time_update_abs(data, std::chrono::nanoseconds{ 10 });
     edata << "#10\n";
 
     REQUIRE(data.str() == edata.str());
-
 }
 
 

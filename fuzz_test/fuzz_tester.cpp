@@ -15,9 +15,9 @@
  */
 
 
-#include <sstream>
-#include <random>
 #include <algorithm>
+#include <cstring>
+#include <sstream>
 
 #include "../src/vcd_tracer.hpp"
 
@@ -55,28 +55,33 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
 
     static FuzzData fuzz_trace;
     size_t i = 0;
-    while (size > i) {
-        size_t take_bytes = std::min(static_cast<size_t>(data[i] % 9), size-i);
+    while (i < size) {
+        const uint8_t cmd = data[i] % 9;
         i++;
-        switch (take_bytes) {
+        switch (cmd) {
         case 0:
             fuzz_trace.var_1.unknown();
             break;
         case 1:
+            if (i + 1 > size) { return 0; }
             fuzz_trace.var_1.set(data[i++]);
             break;
         case 2: {
-            uint16_t v = reinterpret_cast<const uint16_t*>(&data[i])[0];
-            i+=2;
+            if (i + 2 > size) { return 0; }
+            uint16_t v = 0;
+            std::memcpy(&v, &data[i], sizeof(v));
+            i += 2;
             fuzz_trace.var_2.set(v);
             break;
         }
-        case 3: 
-            fuzz_trace.var_2.unknown();      
+        case 3:
+            fuzz_trace.var_2.unknown();
             break;
         case 4: {
-            uint32_t v = reinterpret_cast<const uint32_t*>(&data[i])[0];
-            i+=4;
+            if (i + 4 > size) { return 0; }
+            uint32_t v = 0;
+            std::memcpy(&v, &data[i], sizeof(v));
+            i += 4;
             fuzz_trace.var_3.set(v);
             break;
         }
@@ -90,14 +95,15 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
             fuzz_trace.var_2.undriven();
             break;
         case 8: {
-            uint64_t v = reinterpret_cast<const uint64_t*>(&data[i])[0];
-            i+=8;
+            if (i + 8 > size) { return 0; }
+            uint64_t v = 0;
+            std::memcpy(&v, &data[i], sizeof(v));
+            i += 8;
             fuzz_trace.var_4.set(v);
             break;
         }
         }
         seq++;
     }
-    //fuzz_trace;
     return 0;
 }
