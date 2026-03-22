@@ -8,3 +8,17 @@ repos:
     -   id: end-of-file-fixer
     -   id: check-yaml
     -   id: check-added-large-files
+-   repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: v20.1.8 # Use a specific version to ensure consistent formatting across environments
+    hooks:
+    - id: clang-format
+      # Optional: Specify a style file in your repo (e.g., .clang-format)
+      args: ["-style=.clang-format", "-i"]
+-   repo: local
+    hooks:
+    - id: clang-tidy
+      name: clang-tidy
+      entry: clang-tidy --warnings-as-errors=*
+      language: system
+      types_or: [c, c++]
+      files: ^src/

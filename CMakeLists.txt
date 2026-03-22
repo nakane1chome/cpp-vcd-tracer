@@ -60,8 +60,14 @@ if(ENABLE_PCH)
     <utility>)
 endif()
 
-add_subdirectory(lib/Catch2 EXCLUDE_FROM_ALL)
-include(lib/Catch2/contrib/Catch.cmake)
+include(FetchContent)
+FetchContent_Declare(
+  Catch2
+  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+  GIT_TAG        v2.x
+)
+FetchContent_MakeAvailable(Catch2)
+include(${catch2_SOURCE_DIR}/contrib/Catch.cmake)
 
 if(ENABLE_TESTING)
   enable_testing()

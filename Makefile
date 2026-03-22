@@ -6,7 +6,7 @@ export CLICOLOR=0
 all: test
 
 .PHONY: build
-build : 
+build :
 	cmake -S . -B build -DENABLE_FUZZING:BOOL=OFF
 
 .PHONY: build_clang
@@ -30,25 +30,26 @@ make_cov : build_cov
 	cmake --build build_cov
 
 .PHONY: test
-test: make
-	cd build; ctest -C Release 
+test: make make_clang
+	cd build; ctest -C Release
+	cd build_clang; ctest -C Release
 
 .PHONY: test_cov
-test_cov: make_cov 
-	cd build_cov; ctest -C Release 
+test_cov: make_cov
+	cd build_cov; ctest -C Release
 	gcovr --delete --root ../ --print-summary --xml-pretty --xml coverage.xml .
 
 .PHONY: test_clang
 test_clang: make_clang
-	cd build_clang; ctest -C Release 
+	cd build_clang; ctest -C Release
 
 .PHONY: format
 format:
-	clang-format-14 -i ${ALL_SRC}
+	clang-format-20 -i ${ALL_SRC}
 
 .PHONY: lint
 lint: build_clang
-	clang-tidy-14 \
+	clang-tidy \
 		-p build_clang \
 		src/vcd_tracer.cpp
 
