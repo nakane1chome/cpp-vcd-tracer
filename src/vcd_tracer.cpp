@@ -1,19 +1,30 @@
-/* 
+/*
  *  C++ VCD Tracer Library
  *
  *  For more information see https://github.com/nakane1chome/cpp-vcd-tracer
  *
  * Copyright (c) 2022, Philip Mulholland
  * All rights reserved.
- * 
+ *
  * Using the  BSD 3-Clause License
  *
  * See LICENSE for license details.
  */
 
+#include <array>
+#include <chrono>
 #include <cmath>
-#include <iomanip>
+#include <cstdio>
+#include <ctime>
+#include <ios>
+#include <map>
+#include <memory>
+#include <ostream>
+#include <string>
+#include <string_view>
 #include <type_traits>
+#include <utility>
+#include <vector>
 
 #include "vcd_tracer.hpp"
 
@@ -65,7 +76,7 @@ namespace vcd_tracer {
 
     void module::finalize_header(
         std::ostream &out,
-        std::shared_ptr<const module_instance> context) {
+        const std::shared_ptr<const module_instance> &context) {
         // Module and var definitions have been done, collect the
         // submodules and end the definition.
         out << context->vcd_scope.str();
@@ -81,22 +92,22 @@ namespace vcd_tracer {
 
     top::top(std::string_view name)
         : root(
-            // This function will register any variable in the child
-            // hierarchy with this top module.
-            [identifier_generator = _identifier_generator, var_map = _var_map](const std::string_view full_path,
-                                                                               scope_fn::dumper_fn fn) -> value_context {
-                // Allocate a new identifier
-                const std::string identifier = identifier_generator->next();
-                // Register this new varaible - the path and function to write values to the trace.
-                var_map->identifier_map[identifier] = full_path;
-                var_map->dumper_map[identifier] = fn;
-                // Create a function that allows the registration in this class to be reset by the variable destructor.
-                auto updater = [identifier, var_map](scope_fn::dumper_fn fn) -> void {
-                    var_map->dumper_map[identifier] = fn;
-                };
-                return value_context{ identifier, updater };
-            },
-            name) {
+              // This function will register any variable in the child
+              // hierarchy with this top module.
+              [identifier_generator = _identifier_generator, var_map = _var_map](const std::string_view full_path,
+                                                                                 scope_fn::dumper_fn dumper) -> value_context {
+                  // Allocate a new identifier
+                  const std::string identifier = identifier_generator->next();
+                  // Register this new varaible - the path and function to write values to the trace.
+                  var_map->identifier_map[identifier] = full_path;
+                  var_map->dumper_map[identifier] = std::move(dumper);
+                  // Create a function that allows the registration in this class to be reset by the variable destructor.
+                  auto updater = [identifier, var_map](scope_fn::dumper_fn updated_dumper) -> void {
+                      var_map->dumper_map[identifier] = std::move(updated_dumper);
+                  };
+                  return value_context{ identifier, updater };
+              },
+              name) {
     }
 
     void top::log_time(std::ostream &out,
@@ -123,9 +134,14 @@ namespace vcd_tracer {
 
     void top::finalize_header(std::ostream &out, std::chrono::time_point<std::chrono::system_clock> date) {
         // Create the VCD header
-        std::time_t start_time = std::chrono::system_clock::to_time_t(date);
+        const std::time_t start_time = std::chrono::system_clock::to_time_t(date);
+        std::tm time_buf{};
+        static_cast<void>(gmtime_r(&start_time, &time_buf));
+        static constexpr size_t DATE_BUF_SIZE = 64;
+        std::array<char, DATE_BUF_SIZE> date_str{};
+        static_cast<void>(std::strftime(date_str.data(), date_str.size(), "%a %b %e %H:%M:%S %Y\n", &time_buf));
         out << "$date\n"
-            << "   " << std::asctime(std::gmtime(&start_time))
+            << "   " << date_str.data()
             << "$end\n";
         out << "$timescale\n"
             << "   1" << vcd_timescale<top::time_base>::value << "\n"
@@ -149,7 +165,7 @@ namespace vcd_tracer {
         time_update_core(out);
         // Now the variables have been dumped to capture the state UP TO this time
         // log the time
-        const auto delta_count = delta.count();
+        const auto delta_count = static_cast<scope_fn::sequence_t>(delta.count());
         _timestamp += delta_count;
         if (_timestamp <= _tracepoint) {
             // If the timestamp has fallen behind the tracepoint, move it forward
@@ -170,9 +186,9 @@ namespace vcd_tracer {
         time_update_core(out);
         // Now the variables have been dumped to capture the state UP TO this time
         // log the time
-        auto new_timestamp_count = new_timestamp.count();
+        auto new_timestamp_count = static_cast<scope_fn::sequence_t>(new_timestamp.count());
         if (new_timestamp_count >= _timestamp) {
-            if (new_timestamp_count <= static_cast<long int>(_tracepoint)) {
+            if (new_timestamp_count <= _tracepoint) {
                 // If the timestamp has fallen behind the tracepoint, move it forward
                 new_timestamp_count = _tracepoint;
                 if constexpr (SIMPLE_VCD_DEBUG) {
@@ -192,7 +208,7 @@ namespace vcd_tracer {
 
     void top::time_update_core(std::ostream &out) {
         bool first_unset = true;
-        scope_fn::sequence_t first_sequence;
+        scope_fn::sequence_t first_sequence = 0;
         // First pass - find order of next sample
         std::map<scope_fn::sequence_t, std::vector<std::string>> status;
         if constexpr (SIMPLE_VCD_DEBUG) {
@@ -200,7 +216,7 @@ namespace vcd_tracer {
         }
         // Each variable could be traced out of order to the global timestamp
         // Find the initial time point of the trace variable
-        for (auto [identifier, dump_fn] : _var_map->dumper_map) {
+        for (const auto &[identifier, dump_fn] : _var_map->dumper_map) {
             const auto sequence = dump_fn(out, true);
             if (sequence.next.has_value()) {
                 status[sequence.next.value()].push_back(identifier);
@@ -221,7 +237,7 @@ namespace vcd_tracer {
             out << "$comment second pass " << status.size() << " $end\n";
         }
         // Second pass - trace buffer values.
-        while (status.size() > 0) {
+        while (!status.empty()) {
             const auto [sequence, identifiers] = *status.begin();
             if (first_unset) {
                 first_sequence = sequence;
@@ -275,8 +291,9 @@ namespace vcd_tracer {
         }
         if constexpr (std::is_floating_point_v<T>) {
             // Emulate .%16g
-            std::array<char, 32> format_buf;
-            ::snprintf(format_buf.data(), format_buf.size(), "r%-.16g ", static_cast<double>(value));
+            static constexpr size_t REAL_FORMAT_BUF_SIZE = 32;
+            std::array<char, REAL_FORMAT_BUF_SIZE> format_buf{};
+            static_cast<void>(::snprintf(format_buf.data(), format_buf.size(), "r%-.16g ", static_cast<double>(value)));
             out << format_buf.data() << _scope.identifier << "\n";
         }
         else if constexpr (std::is_same_v<T, bool>) {
@@ -299,22 +316,18 @@ namespace vcd_tracer {
                 out << "z";
             }
             else {
-                T mask = static_cast<T>(1) << (bit_size - 1);
-                bool prev_bit = (value & mask) != 0;
-                bool compress = true;
-                for (int i = bit_size - 2; i >= 0; i--) {
-                    mask = mask >> 1;
-                    const bool this_bit = (value & mask) != 0;
-                    if (compress && (this_bit == prev_bit)) {
-                        // Compress the left bits until a change is present..
-                    }
-                    else {
-                        compress = false;
-                        out << (prev_bit ? "1" : "0");
-                    }
-                    prev_bit = this_bit;
+                using unsigned_T = std::make_unsigned_t<T>;
+                auto uvalue = static_cast<unsigned_T>(value);
+                auto mask = static_cast<unsigned_T>(static_cast<unsigned_T>(1) << (bit_size - 1));
+                // Only compress leading 0s; per IEEE 1364, VCD viewers
+                // zero-fill shorter values, so leading 1s must be kept.
+                while ((mask != static_cast<unsigned_T>(1)) & ((uvalue & mask) == 0)) {
+                    mask = static_cast<unsigned_T>(mask >> 1U);
                 }
-                out << (prev_bit ? "1" : "0");
+                while (mask != 0) {
+                    out << (((uvalue & mask) != 0) ? "1" : "0");
+                    mask = static_cast<unsigned_T>(mask >> 1U);
+                }
             }
             out << " " << _scope.identifier << "\n";
         }

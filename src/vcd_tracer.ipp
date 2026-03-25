@@ -5,7 +5,7 @@
  *
  * Copyright (c) 2022, Philip Mulholland
  * All rights reserved.
- * 
+ *
  * Using the  BSD 3-Clause License
  *
  * See LICENSE for license details.
@@ -47,7 +47,9 @@ namespace vcd_tracer {
                 }
                 else {
                     // Return the valid identifier.
+                    // Skip '#' and '$' as they are reserved in VCD.
                     _identifier[i]++;
+                    if (_identifier[i] == '#') _identifier[i] = '%';
                     return _identifier.data();
                 }
             } while (i != 0);

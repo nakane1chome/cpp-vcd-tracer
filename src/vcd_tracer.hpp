@@ -1,11 +1,11 @@
-/* 
+/*
  *  C++ VCD Tracer Library
  *
  *  For more information see https://github.com/nakane1chome/cpp-vcd-tracer
  *
  * Copyright (c) 2022, Philip Mulholland
  * All rights reserved.
- * 
+ *
  * Using the  BSD 3-Clause License
  *
  * See LICENSE for license details.
@@ -38,6 +38,23 @@ namespace vcd_tracer {
 
     /** Set this to true to log to stderr */
     constexpr bool SIMPLE_VCD_DEBUG = false;
+
+    /** Sanitize a name for use in VCD scope/variable declarations.
+        Replaces characters that are not alphanumeric or underscore with '_'.
+        Prepends '_' if the name starts with a digit.
+    */
+    inline std::string sanitize_vcd_name(std::string_view name) {
+        std::string result(name);
+        for (auto &c : result) {
+            if (!std::isalnum(static_cast<unsigned char>(c)) && c != '_') {
+                c = '_';
+            }
+        }
+        if (!result.empty() && std::isdigit(static_cast<unsigned char>(result[0]))) {
+            result.insert(result.begin(), '_');
+        }
+        return result;
+    }
 
     /** A class to generate VCD a sequence of unique variable identifiers.
         The identifier is composed of printable ASCII characters from ! to ~ (decimal 33 to 126).
@@ -306,7 +323,7 @@ namespace vcd_tracer {
             @param dumper_fn The specialized function that can be used to dump this value to file.
         */
         value_base(const unsigned int bit_size,
-                   const char *var_type, 
+                   const char *var_type,
                    scope_fn::add_fn add_fn,
                    const std::string_view var_name,
                    scope_fn::dumper_fn dumper_fn)
@@ -357,9 +374,9 @@ namespace vcd_tracer {
       protected:
         // A common dumper function.
         template<typename T>
-        void dump(std::ostream &out, 
-                  const size_t bit_size, 
-                  const value_state state, 
+        void dump(std::ostream &out,
+                  const size_t bit_size,
+                  const value_state state,
                   const T value) const;
     };// value_base
 
@@ -367,11 +384,11 @@ namespace vcd_tracer {
     /** A helper function to determine if a change is traced.
         @retval true The sample has changed.
     */
-    template<typename T> 
+    template<typename T>
     inline bool sample_changed(const T new_sample, const T prev_sample) {
         return new_sample != prev_sample;
     }
-    
+
     /** Typed value for tracing representation.
         @tparam BIT_SIZE - The size in bits of the type.
         @tparam TRACE_DEPTH - When set to more than one a buffer of values can be accumulated before writing to file.
@@ -449,7 +466,7 @@ namespace vcd_tracer {
             @param default_value Initial value to be traced at time 0.
         */
         virtual void elaborate(scope_fn::add_fn add_fn,
-                       const std::string_view var_name) override {
+                               const std::string_view var_name) override {
             elaborate_base(BIT_SIZE,
                            vcd_var_type<T>::value,
                            add_fn,
@@ -494,18 +511,18 @@ namespace vcd_tracer {
         }
         /** Assign this trace variable to the undriven (Z) state
          */
-        virtual void undriven(void) override  {
+        virtual void undriven(void) override {
             set_state<value_state::undriven_z>();
         }
 
         virtual void set_uint64(uint64_t v) override {
-            if constexpr (sizeof(T)<=8) {
+            if constexpr (sizeof(T) <= 8) {
                 const T vv = static_cast<T>(v);
                 set(vv);
             }
         }
         virtual void set_double(double v) override {
-            if constexpr (sizeof(T)<=8) {
+            if constexpr (sizeof(T) <= 8) {
                 const T vv = static_cast<T>(v);
                 set(vv);
             }
@@ -568,7 +585,7 @@ namespace vcd_tracer {
         module(scope_fn::register_fn register_fn,
                std::string_view instance_name) :_register_fn{ register_fn },
             _context{ std::make_shared<module_instance>(instance_name) } {
-            _context->vcd_scope << "$scope module " << instance_name << " $end\n";
+            _context->vcd_scope << "$scope module " << sanitize_vcd_name(instance_name) << " $end\n";
         }
         /** Declare a module instance, and provide the parent scope a reference to another module.
             @param parent   Provide the scope via this reference.
@@ -577,7 +594,7 @@ namespace vcd_tracer {
         module(module &parent,
                std::string_view instance_name) :_register_fn{ parent.get_register_fn() },
             _context{ std::make_shared<module_instance>(instance_name) } {
-            _context->vcd_scope << "$scope module " << instance_name << " $end\n";
+            _context->vcd_scope << "$scope module " << sanitize_vcd_name(instance_name) << " $end\n";
             parent._context->children.push_back(_context);
         }
 
@@ -591,7 +608,7 @@ namespace vcd_tracer {
                std::string_view instance_name,
                std::weak_ptr<module_instance> parent_context) :_register_fn{ register_fn },
             _context{ std::make_shared<module_instance>(instance_name) } {
-            _context->vcd_scope << "$scope module " << instance_name << " $end\n";
+            _context->vcd_scope << "$scope module " << sanitize_vcd_name(instance_name) << " $end\n";
             if (auto use_parent_context = parent_context.lock()) {
                 use_parent_context->children.push_back(_context);
             }
@@ -642,7 +659,7 @@ namespace vcd_tracer {
 
       private:
         void finalize_header(std::ostream &out,
-                             std::shared_ptr<const module_instance> context);
+                             const std::shared_ptr<const module_instance> &context);
 
         /** A function that can be passed to a new trace variable to declare it within the scope of this module instance
          */
@@ -656,7 +673,7 @@ namespace vcd_tracer {
                 << "$var " << var_type
                 << " " << bit_size
                 << " " << value_context.identifier
-                << " " << var_name
+                << " " << sanitize_vcd_name(var_name)
                 << " $end\n";
             return value_context;
         }
@@ -725,13 +742,12 @@ namespace vcd_tracer {
         void finalize_trace(std::ostream &out);
 
       private:
-
         struct map_data {
             // Map identifiers to variable names
             std::map<std::string, std::string> identifier_map;
             // Map idenfiers to dump functions.
             std::map<std::string, scope_fn::dumper_fn> dumper_map;
-        } ;
+        };
 
       private:
         /** This function will do the bulk of the dumping af variables. */
@@ -739,9 +755,9 @@ namespace vcd_tracer {
 
       private:
         // The most recently traced time
-        scope_fn::sequence_t _tracepoint;
+        scope_fn::sequence_t _tracepoint{ 0 };
         // The most recently updated time.
-        scope_fn::sequence_t _timestamp;
+        scope_fn::sequence_t _timestamp{ 0 };
         // Write out a time in the VCD trace format
         void log_time(std::ostream &out, scope_fn::sequence_t new_time, bool force, std::string_view reason);
         // Creation of identifiers
@@ -749,7 +765,7 @@ namespace vcd_tracer {
         // Mapping of registers to identifiers and functions
         std::shared_ptr<map_data> _var_map = std::make_shared<map_data>();
 
-      public : 
+      public:
         //! The root module in the design hiearchy
         module root;
 
