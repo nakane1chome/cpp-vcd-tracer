@@ -46,7 +46,7 @@ namespace vcd_tracer {
     inline std::string sanitize_vcd_name(std::string_view name) {
         std::string result(name);
         for (auto &c : result) {
-            if (!std::isalnum(static_cast<unsigned char>(c)) && c != '_') {
+            if (!std::isalnum(static_cast<unsigned char>(c)) && c != '_' && c != '[' && c != ']') {
                 c = '_';
             }
         }
