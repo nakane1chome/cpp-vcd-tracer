@@ -357,7 +357,6 @@ namespace vcd_tracer {
         }
 
       public:
-      public:
         /** Override the bit size used when dumping values.
             This allows a value<uint64_t> (BIT_SIZE=64) to dump only
             the relevant bits for a narrower signal.
@@ -369,7 +368,7 @@ namespace vcd_tracer {
         // This is the context required to trace the variable.
         value_context _scope;
         // When non-zero, overrides the template BIT_SIZE in dump().
-        size_t _runtime_bit_size{0};
+        size_t _runtime_bit_size{ 0 };
 
       protected:
         // A common dumper function.
@@ -630,7 +629,7 @@ namespace vcd_tracer {
                           std::string_view var_type,
                           const unsigned int bit_size,
                           scope_fn::dumper_fn fn) -> value_context {
-                return this->add_var(var_name, var_type, bit_size, fn);
+                return this->add_var(var_name, var_type, bit_size, std::move(fn));
             };
         }
         /**
@@ -667,8 +666,8 @@ namespace vcd_tracer {
                                             std::string_view var_type,
                                             const unsigned int bit_size,
                                             scope_fn::dumper_fn fn) {
-            std::string child_path = _context->instance_name + "." + std::string(var_name);
-            auto value_context = _register_fn(child_path, fn);
+            const std::string child_path = _context->instance_name + "." + std::string(var_name);
+            auto value_context = _register_fn(child_path, std::move(fn));
             _context->vcd_scope
                 << "$var " << var_type
                 << " " << bit_size
@@ -682,7 +681,7 @@ namespace vcd_tracer {
         [[nodiscard]] scope_fn::register_fn get_register_fn(void) {
             return [this](std::string_view child_path,
                           scope_fn::dumper_fn fn) -> value_context {
-                return this->register_var(child_path, fn);
+                return this->register_var(child_path, std::move(fn));
             };
         }
         /** Get the function that can be used to register a variable within this module
@@ -691,8 +690,8 @@ namespace vcd_tracer {
         */
         [[nodiscard]] value_context register_var(std::string_view child_path,
                                                  scope_fn::dumper_fn fn) {
-            std::string this_path = _context->instance_name + "." + std::string(child_path);
-            auto value_context = _register_fn(this_path, fn);
+            const std::string this_path = _context->instance_name + "." + std::string(child_path);
+            auto value_context = _register_fn(this_path, std::move(fn));
             return value_context;
         }
     };// module

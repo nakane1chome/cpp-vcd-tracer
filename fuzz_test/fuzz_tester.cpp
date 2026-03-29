@@ -1,11 +1,11 @@
-/*  
+/*
  *  C++ VCD Tracer Library Fuzz tests
  *
  *  For more information see https://github.com/nakane1chome/simple-vcd
  *
  * Copyright (c) 2022, Philip Mulholland
  * All rights reserved.
- * 
+ *
  * Using the  BSD 3-Clause License
  *
  * See LICENSE for license details.
@@ -24,9 +24,9 @@
 static vcd_tracer::scope_fn::sequence_t seq = 42;
 
 struct FuzzData {
-    
-    vcd_tracer::top dumper{"root"};
-    
+
+    vcd_tracer::top dumper{ "root" };
+
     vcd_tracer::value<uint8_t, 5, 10, &seq> var_1;
     vcd_tracer::value<uint16_t, 14, 620, &seq> var_2;
     vcd_tracer::value<uint32_t, 28, 5, &seq> var_3;
@@ -42,10 +42,7 @@ struct FuzzData {
         dumper.root.elaborate(var_4, "big_trace_var");
 
         dumper.finalize_header(trace_data, std::chrono::system_clock::from_time_t(0));
-
-        
     }
-
 };
 
 

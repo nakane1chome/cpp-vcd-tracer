@@ -19,16 +19,16 @@
 
 // See https://en.wikipedia.org/wiki/Value_change_dump
 
-#define COMMON_HEADER \
-            "$date\n" \
-            "   Thu Jan  1 00:00:00 1970\n" \
-            "$end\n" \
-            "$timescale\n" \
-            "   1ns\n" \
-            "$end\n" \
-            "$version\n" \
-            "   C++ Simple VCD Logger\n" \
-            "$end\n"
+#define COMMON_HEADER               \
+    "$date\n"                       \
+    "   Thu Jan  1 00:00:00 1970\n" \
+    "$end\n"                        \
+    "$timescale\n"                  \
+    "   1ns\n"                      \
+    "$end\n"                        \
+    "$version\n"                    \
+    "   C++ Simple VCD Logger\n"    \
+    "$end\n"
 
 
 std::string GenerateVcdKey(unsigned int number)// NOLINT(misc-no-recursion)
@@ -479,8 +479,8 @@ TEST_CASE("VCD Top", "VcdTop") {
 
     {
 
-        static constexpr const char *EXPECTED_HEADER = \
-            COMMON_HEADER \
+        static constexpr const char *EXPECTED_HEADER =
+            COMMON_HEADER
             "$scope module root $end\n"
             "$scope module mod1 $end\n"
             "$var wire 1 ! flag $end\n"
@@ -514,8 +514,8 @@ TEST_CASE("VCD Top Trace Buf", "VcdTopTraceBuf") {
 
     {
 
-        static constexpr const char *EXPECTED_HEADER = \
-            COMMON_HEADER \
+        static constexpr const char *EXPECTED_HEADER =
+            COMMON_HEADER
             "$scope module root $end\n"
             "$scope module mod1 $end\n"
             "$var wire 9 ! ka $end\n"
@@ -603,7 +603,7 @@ TEST_CASE("VCD GitHub Issue 5", "VcdIssue5") {
 
 TEST_CASE("VCD GitHub Issue 3", "VcdIssue3") {
 
-    vcd_tracer::value<uint16_t,11> sig_static;
+    vcd_tracer::value<uint16_t, 11> sig_static;
     vcd_tracer::value<uint16_t> sig_dynamic;
 
     sig_dynamic.set_runtime_bit_size(11);
@@ -619,17 +619,16 @@ TEST_CASE("VCD GitHub Issue 3", "VcdIssue3") {
     std::ostringstream header;
     dumper.finalize_header(header, std::chrono::system_clock::from_time_t(0));
 
-    static constexpr const char *EXPECTED_HEADER = \
-      COMMON_HEADER \
-      "$scope module root $end\n"
-      "$scope module dut $end\n"
-      "$var wire 11 ! val_static $end\n"
-      "$var wire 11 \" val_dynamic $end\n"
-      "$upscope $end\n"
-      "$upscope $end\n"
-      "$enddefinitions $end\n"
-      "#0\n";
+    static constexpr const char *EXPECTED_HEADER =
+        COMMON_HEADER
+        "$scope module root $end\n"
+        "$scope module dut $end\n"
+        "$var wire 11 ! val_static $end\n"
+        "$var wire 11 \" val_dynamic $end\n"
+        "$upscope $end\n"
+        "$upscope $end\n"
+        "$enddefinitions $end\n"
+        "#0\n";
 
     REQUIRE(header.str() == EXPECTED_HEADER);
-
 }

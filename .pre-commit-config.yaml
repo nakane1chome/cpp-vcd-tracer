@@ -13,7 +13,7 @@ repos:
     hooks:
     - id: clang-format
       # Optional: Specify a style file in your repo (e.g., .clang-format)
-      args: ["-style=.clang-format", "-i"]
+      args: ["-style=file", "-i"]
 -   repo: local
     hooks:
     - id: clang-tidy
@@ -21,4 +21,4 @@ repos:
       entry: clang-tidy --warnings-as-errors=*
       language: system
       types_or: [c, c++]
-      files: ^src/
+      files: ^src/.*\.(cpp|hpp)$
