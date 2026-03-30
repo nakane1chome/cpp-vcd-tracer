@@ -100,6 +100,7 @@ namespace vcd_tracer {
         //! The type signature of a function used to register a variable and it's dumper.
         using register_fn = std::function<
             struct value_context(std::string_view var_name,
+                                 unsigned int bit_size,
                                  dumper_fn fn)>;
         //! A constant to represent the end of a set of variables to be dumped.
         static constexpr dump_sequence_t end_sequence{ {}, {} };
@@ -120,10 +121,26 @@ namespace vcd_tracer {
     /** Represent the context of a value to be traced.
      */
     struct value_context {
+        value_context(const std::string &identifier_, scope_fn::updater_fn &&updater_)
+            : identifier(identifier_)
+            , updater(std::move(updater_))
+            , bit_size(0)
+            , finalized(false) {
+        }
+        value_context(const std::string &identifier_, scope_fn::updater_fn &&updater_, unsigned int bit_size_)
+            : identifier(identifier_)
+            , updater(std::move(updater_))
+            , bit_size(bit_size_)
+            , finalized(false) {
+        }
         //! The identifier of the value
         std::string identifier;
         //! The update function of the value.
         scope_fn::updater_fn updater;
+        //! Size of the value
+        unsigned int bit_size;
+        //! Finalized in the VCD header
+        bool finalized;
     };
 
 
@@ -327,7 +344,7 @@ namespace vcd_tracer {
                    scope_fn::add_fn add_fn,
                    const std::string_view var_name,
                    scope_fn::dumper_fn dumper_fn)
-            : _scope(add_fn(var_name, var_type, bit_size, dumper_fn)) {
+            : _scope{ add_fn(var_name, var_type, bit_size, dumper_fn) } {
         }
         /** Create a new value to be traced without defining it at compile time.
             @param bit_size  The size, in bits, of this value.
@@ -336,8 +353,7 @@ namespace vcd_tracer {
         */
         value_base(unsigned int bit_size)
             // Define a default do nothing trace context
-            : _scope{ "", scope_fn::nop_update } {
-            (void)bit_size;
+            : _scope{ "", scope_fn::nop_update, bit_size } {
         }
 
         /**
@@ -346,14 +362,11 @@ namespace vcd_tracer {
             @param var_name  The name of the value to be traced.
             @param dumper_fn The specialized function that can be used to dump this value to file.
          */
-        void elaborate_base(const unsigned int bit_size,
-                            const char *var_type,
+        void elaborate_base(const char *var_type,
                             scope_fn::add_fn add_fn,
                             const std::string_view var_name,
                             scope_fn::dumper_fn dumper_fn) {
-            auto new_scope = add_fn(var_name, var_type, bit_size, dumper_fn);
-            _scope.identifier = new_scope.identifier;
-            _scope.updater = new_scope.updater;
+            _scope = add_fn(var_name, var_type, _scope.bit_size, dumper_fn);
         }
 
       public:
@@ -362,19 +375,18 @@ namespace vcd_tracer {
             the relevant bits for a narrower signal.
             @param bs The actual bit width of the signal.
         */
-        void set_runtime_bit_size(unsigned int bs) { _runtime_bit_size = bs; }
+        void set_bit_size(unsigned int bs) {
+            _scope.bit_size = bs;
+        }
 
       protected:
         // This is the context required to trace the variable.
         value_context _scope;
-        // When non-zero, overrides the template BIT_SIZE in dump().
-        size_t _runtime_bit_size{ 0 };
 
       protected:
         // A common dumper function.
         template<typename T>
         void dump(std::ostream &out,
-                  const size_t bit_size,
                   const value_state state,
                   const T value) const;
     };// value_base
@@ -466,8 +478,7 @@ namespace vcd_tracer {
         */
         virtual void elaborate(scope_fn::add_fn add_fn,
                                const std::string_view var_name) override {
-            elaborate_base(BIT_SIZE,
-                           vcd_var_type<T>::value,
+            elaborate_base(vcd_var_type<T>::value,
                            add_fn,
                            var_name,
                            std::bind(&value<T, BIT_SIZE, TRACE_DEPTH, CUR_SEQ>::dump, this, std::placeholders::_1, std::placeholders::_2));
@@ -667,21 +678,24 @@ namespace vcd_tracer {
                                             const unsigned int bit_size,
                                             scope_fn::dumper_fn fn) {
             const std::string child_path = _context->instance_name + "." + std::string(var_name);
-            auto value_context = _register_fn(child_path, std::move(fn));
+            auto value_context = _register_fn(child_path, bit_size, std::move(fn));
+
             _context->vcd_scope
                 << "$var " << var_type
-                << " " << bit_size
+                << " " << value_context.bit_size
                 << " " << value_context.identifier
                 << " " << sanitize_vcd_name(var_name)
                 << " $end\n";
+            value_context.finalized = true;
             return value_context;
         }
         /** Get the function that can be used to register a variable within this module
          */
         [[nodiscard]] scope_fn::register_fn get_register_fn(void) {
             return [this](std::string_view child_path,
+                          unsigned int bit_size,
                           scope_fn::dumper_fn fn) -> value_context {
-                return this->register_var(child_path, std::move(fn));
+                return this->register_var(child_path, bit_size, std::move(fn));
             };
         }
         /** Get the function that can be used to register a variable within this module
@@ -689,9 +703,10 @@ namespace vcd_tracer {
             @param fn         The function that will be used to dump a given variable to file.
         */
         [[nodiscard]] value_context register_var(std::string_view child_path,
+                                                 unsigned int bit_size,
                                                  scope_fn::dumper_fn fn) {
             const std::string this_path = _context->instance_name + "." + std::string(child_path);
-            auto value_context = _register_fn(this_path, std::move(fn));
+            auto value_context = _register_fn(this_path, bit_size, std::move(fn));
             return value_context;
         }
     };// module
