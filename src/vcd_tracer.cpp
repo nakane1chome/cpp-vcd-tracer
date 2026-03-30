@@ -95,6 +95,7 @@ namespace vcd_tracer {
               // This function will register any variable in the child
               // hierarchy with this top module.
               [identifier_generator = _identifier_generator, var_map = _var_map](const std::string_view full_path,
+                                                                                 unsigned int bit_size,
                                                                                  scope_fn::dumper_fn dumper) -> value_context {
                   // Allocate a new identifier
                   const std::string identifier = identifier_generator->next();
@@ -105,7 +106,7 @@ namespace vcd_tracer {
                   auto updater = [identifier, var_map](scope_fn::dumper_fn updated_dumper) -> void {
                       var_map->dumper_map[identifier] = std::move(updated_dumper);
                   };
-                  return value_context{ identifier, updater };
+                  return value_context{ identifier, updater, bit_size };
               },
               name) {
     }
@@ -283,7 +284,6 @@ namespace vcd_tracer {
 
     template<typename T>
     void value_base::dump(std::ostream &out,
-                          const size_t bit_size,
                           const value_state state,
                           const T value) const {
         if constexpr (SIMPLE_VCD_DEBUG) {
@@ -318,7 +318,7 @@ namespace vcd_tracer {
             else {
                 using unsigned_T = std::make_unsigned_t<T>;
                 auto uvalue = static_cast<unsigned_T>(value);
-                auto mask = static_cast<unsigned_T>(static_cast<unsigned_T>(1) << (bit_size - 1));
+                auto mask = static_cast<unsigned_T>(static_cast<unsigned_T>(1) << (_scope.bit_size - 1));
                 // Only compress leading 0s; per IEEE 1364, VCD viewers
                 // zero-fill shorter values, so leading 1s must be kept.
                 while ((mask != static_cast<unsigned_T>(1)) & ((uvalue & mask) == 0)) {
@@ -336,22 +336,22 @@ namespace vcd_tracer {
     // ------------------------------------------------------------------------
     // Template instanciations of value<>
 
-    template void value_base::dump<bool>(std::ostream &out, const size_t bit_size, const value_state state, const bool value) const;
+    template void value_base::dump<bool>(std::ostream &out, const value_state state, const bool value) const;
 
-    template void value_base::dump<int>(std::ostream &out, const size_t bit_size, const value_state state, const int value) const;
-    template void value_base::dump<unsigned int>(std::ostream &out, const size_t bit_size, const value_state state, const unsigned int value) const;
+    template void value_base::dump<int>(std::ostream &out, const value_state state, const int value) const;
+    template void value_base::dump<unsigned int>(std::ostream &out, const value_state state, const unsigned int value) const;
 
-    template void value_base::dump<char>(std::ostream &out, const size_t bit_size, const value_state state, const char value) const;
-    template void value_base::dump<unsigned char>(std::ostream &out, const size_t bit_size, const value_state state, const unsigned char value) const;
+    template void value_base::dump<char>(std::ostream &out, const value_state state, const char value) const;
+    template void value_base::dump<unsigned char>(std::ostream &out, const value_state state, const unsigned char value) const;
 
-    template void value_base::dump<short>(std::ostream &out, const size_t bit_size, const value_state state, const short value) const;
-    template void value_base::dump<unsigned short>(std::ostream &out, const size_t bit_size, const value_state state, const unsigned short value) const;
+    template void value_base::dump<short>(std::ostream &out, const value_state state, const short value) const;
+    template void value_base::dump<unsigned short>(std::ostream &out, const value_state state, const unsigned short value) const;
 
-    template void value_base::dump<long>(std::ostream &out, const size_t bit_size, const value_state state, const long value) const;
-    template void value_base::dump<unsigned long>(std::ostream &out, const size_t bit_size, const value_state state, const unsigned long value) const;
+    template void value_base::dump<long>(std::ostream &out, const value_state state, const long value) const;
+    template void value_base::dump<unsigned long>(std::ostream &out, const value_state state, const unsigned long value) const;
 
-    template void value_base::dump<float>(std::ostream &out, const size_t bit_size, const value_state state, const float value) const;
-    template void value_base::dump<double>(std::ostream &out, const size_t bit_size, const value_state state, const double value) const;
+    template void value_base::dump<float>(std::ostream &out, const value_state state, const float value) const;
+    template void value_base::dump<double>(std::ostream &out, const value_state state, const double value) const;
 
 
 };// namespace vcd_tracer

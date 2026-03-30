@@ -1,5 +1,5 @@
 ---
-Checks:          '*,-fuchsia-*,-google-*,-zircon-*,-abseil-*,-modernize-use-trailing-return-type,-llvm*,-altera-*,-misc-no-recursion,-cppcoreguidelines-pro-type-vararg,-hicpp-vararg,-readability-function-cognitive-complexity'
+Checks:          '*,-fuchsia-*,-google-*,-zircon-*,-abseil-*,-modernize-use-trailing-return-type,-llvm*,-altera-*,-misc-no-recursion,-cppcoreguidelines-pro-type-vararg,-hicpp-vararg,-readability-function-cognitive-complexity,-modernize-redundant-void-arg,-readability-identifier-length,-readability-redundant-access-specifiers,-misc-non-private-member-variables-in-classes,-cppcoreguidelines-non-private-member-variables-in-classes,-misc-include-cleaner,-hicpp-explicit-conversions,-modernize-return-braced-init-list,-cppcoreguidelines-avoid-const-or-ref-data-members,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-modernize-pass-by-value,-performance-enum-size,-performance-unnecessary-value-param,-readability-avoid-const-params-in-decls,-readability-implicit-bool-conversion,-modernize-use-override,-hicpp-use-override,-cppcoreguidelines-explicit-virtual-functions,-clang-diagnostic-unused-command-line-argument'
 WarningsAsErrors: ''
 HeaderFilterRegex: ''
 FormatStyle:     none
