@@ -71,7 +71,7 @@ TEST_CASE("VCD Integer Value", "VcdValue") {
         my_full_path = full_path;
         my_dumper = fn;
         my_bit_size = bit_size;
-        return vcd_tracer::value_context{ "vv", update_fn };
+        return vcd_tracer::value_context{ "vv", update_fn, bit_size };
     };
 
     {
@@ -311,7 +311,7 @@ TEST_CASE("VCD Trace Buffer", "VcdTraceBuffer") {
         my_full_path = full_path;
         my_dumper = fn;
         my_bit_size = bit_size;
-        return vcd_tracer::value_context{ "vv", update_fn };
+        return vcd_tracer::value_context{ "vv", update_fn, bit_size };
     };
 
     vcd_tracer::value<int, 9, 10, &seq> test_var(add_fn, "Path.To.Var");
@@ -365,10 +365,11 @@ TEST_CASE("VCD Module", "VcdModule") {
     };
 
     auto register_fn = [&](const std::string_view full_path,
+                           unsigned int bit_size,
                            vcd_tracer::scope_fn::dumper_fn fn) {
         my_full_path = full_path;
         my_dumper = fn;
-        return vcd_tracer::value_context{ std::string(full_path), update_fn };
+        return vcd_tracer::value_context{ std::string(full_path), update_fn, bit_size };
     };
 
 
@@ -420,10 +421,11 @@ TEST_CASE("VCD Module Elaborate", "VcdModuleElaborate") {
     };
 
     auto register_fn = [&](const std::string_view full_path,
+                           unsigned int bit_size,
                            vcd_tracer::scope_fn::dumper_fn fn) {
         my_full_path = full_path;
         my_dumper = fn;
-        return vcd_tracer::value_context{ std::string(full_path), update_fn };
+        return vcd_tracer::value_context{ std::string(full_path), update_fn, bit_size };
     };
 
 
@@ -606,9 +608,9 @@ TEST_CASE("VCD GitHub Issue 3", "VcdIssue3") {
     vcd_tracer::value<uint16_t, 11> sig_static;
     vcd_tracer::value<uint16_t> sig_dynamic;
 
-    sig_dynamic.set_runtime_bit_size(11);
+    sig_dynamic.set_bit_size(11);
 
-    vcd_tracer::top dumper("top");
+    vcd_tracer::top dumper("root");
     {
         vcd_tracer::module mod(dumper.root, "dut");
         mod.elaborate(sig_static, "val_static");
@@ -628,7 +630,9 @@ TEST_CASE("VCD GitHub Issue 3", "VcdIssue3") {
         "$upscope $end\n"
         "$upscope $end\n"
         "$enddefinitions $end\n"
-        "#0\n";
+        "#0\n"
+        "bx !\n"
+        "bx \"\n";
 
     REQUIRE(header.str() == EXPECTED_HEADER);
 }
