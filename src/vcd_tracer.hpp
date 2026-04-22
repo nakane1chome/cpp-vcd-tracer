@@ -356,7 +356,6 @@ namespace vcd_tracer {
             _scope.updater = new_scope.updater;
         }
 
-      public:
       protected:
         // This is the context required to trace the variable.
         value_context _scope;
@@ -399,28 +398,35 @@ namespace vcd_tracer {
         index<TRACE_DEPTH> _idx{ 0 };
         // The values will be stored directly in this instance.
         std::array<sample<T, CUR_SEQ>, static_cast<size_t>(TRACE_DEPTH)> _samples;
+        // The effective bit width used for the VCD header and dump.
+        // Set at construction time; defaults to the BIT_SIZE template parameter.
+        unsigned int _effective_bit_size{BIT_SIZE};
 
       public:
-        /** Instanciate an uninitialized value. The state will be set to unknown
+        /** Instanciate an uninitialized value. The state will be set to unknown.
             The name and scope need to be set later via elaborate().
+            To use a non-default bit width, call set_bit_size() before elaborate().
          */
         value(void)
-            : value_base(BIT_SIZE) {
+            : value_base(BIT_SIZE)
+            , _effective_bit_size(BIT_SIZE) {
             _idx.write = -1;
             _samples[0].set_state(value_state::unknown_x);
         }
         /** Instanciate a trace value with an initialized value. The state will be set to known.
             @param default_value Initial value to be traced at time 0.
+            @param bit_size Optional bit width for the VCD signal. Defaults to BIT_SIZE.
             The name and scope need to be set later via elaborate().
          */
-        value(const T default_value)
-            : value_base(BIT_SIZE) {
+        value(const T default_value, unsigned int bit_size = BIT_SIZE)
+            : value_base(bit_size)
+            , _effective_bit_size(bit_size) {
             _idx.write = -1;
             _samples[0].set(default_value);
         }
-        /** Instanciate named and scoped trace value with an uninitialized value. The state will be set to unknown
-            @param var_name variable name
+        /** Instanciate named and scoped trace value with an uninitialized value. The state will be set to unknown.
             @param add_fn Funtion to register this trace variable with it's scope.
+            @param var_name variable name
         */
         value(scope_fn::add_fn add_fn,
               const std::string_view var_name)
@@ -430,34 +436,46 @@ namespace vcd_tracer {
                          var_name,
                          [this](std::ostream &out, bool start) -> scope_fn::dump_sequence_t {
                              return this->dump(out, start);
-                         }) {
+                         })
+            , _effective_bit_size(BIT_SIZE) {
             _idx.write = -1;
         }
         /** Instanciate named and scoped trace value with an initialized value. The state will be set to known.
-            @param var_name variable name
             @param add_fn Funtion to register this trace variable with it's scope.
+            @param var_name variable name
             @param default_value Initial value to be traced at time 0.
+            @param bit_size Optional bit width for the VCD signal. Defaults to BIT_SIZE.
         */
         value(scope_fn::add_fn add_fn,
               const std::string_view var_name,
-              const T default_value)
-            : value_base(BIT_SIZE,
+              const T default_value,
+              unsigned int bit_size = BIT_SIZE)
+            : value_base(bit_size,
                          vcd_var_type<T>::value,
                          add_fn,
                          var_name,
                          [this](std::ostream &out, bool start) -> scope_fn::dump_sequence_t {
                              return this->dump(out, start);
-                         }) {
+                         })
+            , _effective_bit_size(bit_size) {
             _idx.write = -1;
             _samples[0].set(default_value);
         }
-        /** Elaborate a value by settings it's name and scope
+        /** Override the bit width used for the VCD header and value dump.
+            Must be called before elaborate(). Has no effect after elaborate().
+            When not called the width defaults to the BIT_SIZE template parameter.
+            @param bs The actual bit width of the signal.
+        */
+        void set_bit_size(unsigned int bs) { _effective_bit_size = bs; }
+
+        /** Elaborate a value by settings it's name and scope.
+            Uses the bit width set at construction time or via set_bit_size().
             @param add_fn Funtion to register this trace variable with it's scope.
-            @param default_value Initial value to be traced at time 0.
+            @param var_name The variable name.
         */
         virtual void elaborate(scope_fn::add_fn add_fn,
                                const std::string_view var_name) override {
-            elaborate_base(BIT_SIZE,
+            elaborate_base(_effective_bit_size,
                            vcd_var_type<T>::value,
                            add_fn,
                            var_name,
