@@ -37,7 +37,7 @@ BreakBeforeBinaryOperators: NonAssignment
 BreakBeforeBraces: Custom
 BreakBeforeInheritanceComma: true
 BreakBeforeTernaryOperators: true
-BreakConstructorInitializers: BeforeComma 
+BreakConstructorInitializers: BeforeComma
 BreakConstructorInitializersBeforeComma: true
 BreakStringLiterals: true
 ColumnLimit: 0
@@ -94,4 +94,3 @@ SpacesInSquareBrackets: false
 Standard: c++17
 TabWidth: 4
 UseTab: Never
-
